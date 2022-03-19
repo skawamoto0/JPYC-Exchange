@@ -56,17 +56,17 @@
 .textinput{
 	color: #000000;
 	background-color: #ffffff;
-	font-size: 0.75em;
+	font-size: 1em;
 }
 .textbutton1{
 	color: #000000;
 	background-color: #80ff80;
-	font-size: 0.75em;
+	font-size: 1em;
 }
 .textbutton2{
 	color: #000000;
 	background-color: #ff8080;
-	font-size: 0.75em;
+	font-size: 1em;
 }
 .textoutput{
 	color: #000000;
@@ -316,6 +316,7 @@ function Log(x){
 	document.getElementById("log").innerText += new Date().toISOString() + " " + x + "\n";
 };
 function StringToBN(x, d){
+	x = x.toString();
 	if(x.indexOf(".") < 0){
 		return JX.web3.utils.toBN(parseInt(x)).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
 	}
@@ -328,21 +329,39 @@ function StringToBN(x, d){
 	return b;
 }
 function BNToString(x, d){
-	return (parseInt(x) / (10 ** d)).toString();
+	x = JX.web3.utils.toBN(x);
+	let s = "";
+	if(x.toString().length > d){
+		return x.toString().slice(0, -d) + "." + x.toString().slice(-d);
+	}
+	x = x.add(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
+	return "0." + x.toString().slice(-d);
 }
 async function Connect(){
 	await JX.ConnectWallet();
 	Log("Connected");
 }
 async function QuoteJpycForUsdc(){
-	Amount = StringToBN(document.getElementById("jpyc").value, 18);
+	Amount = StringToBN(document.getElementById("amountjpyc").value, 18);
 	let Minimum = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount);
-	document.getElementById("usdc").value = BNToString(Minimum, 6);
+	document.getElementById("amountusdc").value = BNToString(Minimum, 6);
+	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
+	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
 }
 async function QuoteUsdcForJpyc(){
-	Amount = StringToBN(document.getElementById("usdc").value, 6);
+	Amount = StringToBN(document.getElementById("amountusdc").value, 6);
 	let Minimum = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount);
-	document.getElementById("jpyc").value = BNToString(Minimum, 18);
+	document.getElementById("amountjpyc").value = BNToString(Minimum, 18);
+	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
+	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
+}
+async function UseMaxJpyc(){
+	document.getElementById("amountjpyc").value = BNToString(await JX.BalanceOf("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c"), 18);
+	await QuoteJpycForUsdc();
+}
+async function UseMaxUsdc(){
+	document.getElementById("amountusdc").value = BNToString(await JX.BalanceOf("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"), 6);
+	await QuoteUsdcForJpyc();
 }
 async function SwapJpycForUsdc(){
 	let x = await JX.Allowance("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
@@ -351,9 +370,9 @@ async function SwapJpycForUsdc(){
 		let Tx = await JX.Approve("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("jpyc").value, 18);
-	let Minimum = StringToBN((parseFloat(document.getElementById("usdc").value) * 0.99).toString(), 6);
-	Log("Swap " + document.getElementById("jpyc").value + " JPYC for " + (parseFloat(document.getElementById("usdc").value) * 0.99) + " USDC");
+	let Amount = StringToBN(document.getElementById("amountjpyc").value, 18);
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.995).toString(), 6);
+	Log("Swap " + document.getElementById("amountjpyc").value + " JPYC for " + (parseFloat(document.getElementById("amountusdc").value) * 0.995) + " USDC");
 	let Tx = await JX.Swap("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }
@@ -364,9 +383,9 @@ async function SwapUsdcForJpyc(){
 		let Tx = await JX.Approve("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("usdc").value, 6);
-	let Minimum = StringToBN((parseFloat(document.getElementById("jpyc").value) * 0.99).toString(), 18);
-	Log("Swap " + document.getElementById("usdc").value + " USDC for " + (parseFloat(document.getElementById("jpyc").value) * 0.99) + " JPYC");
+	let Amount = StringToBN(document.getElementById("amountusdc").value, 6);
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.995).toString(), 18);
+	Log("Swap " + document.getElementById("amountusdc").value + " USDC for " + (parseFloat(document.getElementById("amountjpyc").value) * 0.995) + " JPYC");
 	let Tx = await JX.Swap("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }
@@ -386,8 +405,11 @@ The best rate is automatically shown and used on exchanges.<br>
 <div class="boxoneline texttitle2">JPYC</div>
 <div class="boxoneline">
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
-<input type="text" id="jpyc" class="boxinline textinput" onchange="QuoteJpycForUsdc();"><br>
+<input type="text" id="amountjpyc" class="boxinline textinput" oninput="QuoteJpycForUsdc();"><br>
+Rate<br>
+<div id="ratejpyc" class="boxoneline textoutput"></div>
 <form onsubmit="SwapJpycForUsdc();return false;">
+<input type="button" value="Use max" class="boxinline textbutton1" = onclick="UseMaxJpyc();">
 <input type="submit" value="Swap JPYC for USDC" class="boxinline textbutton1">
 </form>
 </div>
@@ -396,8 +418,11 @@ The best rate is automatically shown and used on exchanges.<br>
 <div class="boxoneline texttitle2">USDC</div>
 <div class="boxoneline">
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
-<input type="text" id="usdc" class="boxinline textinput" onchange="QuoteUsdcForJpyc();"><br>
+<input type="text" id="amountusdc" class="boxinline textinput" oninput="QuoteUsdcForJpyc();"><br>
+Rate<br>
+<div id="rateusdc" class="boxoneline textoutput"></div>
 <form onsubmit="SwapUsdcForJpyc();return false;">
+<input type="button" value="Use max" class="boxinline textbutton1" = onclick="UseMaxUsdc();">
 <input type="submit" value="Swap USDC for JPYC" class="boxinline textbutton1">
 </form>
 </div>
