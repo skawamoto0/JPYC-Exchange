@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>JPYC Exchange</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.boxinline{
+	display: inline-block;
+	padding: 0.5em;
+	margin: 0.25em;
+	border-radius: 0.5em;
+}
+.boxoneline{
+	display: block;
+	min-height: 1em;
+	padding: 0.5em;
+	margin: 0.25em;
+	border-radius: 0.5em;
+}
+.textmain{
+	color: #000000;
+	background-color: #ffffff;
+	text-align: left;
+	font-size: 1em;
+}
+.texttitle1{
+	color: #000000;
+	background-color: #40a0ff;
+	text-align: center;
+	font-size: 1.5em;
+	font-weight: bold;
+}
+.texttitle2{
+	color: #000000;
+	background-color: #c0e0ff;
+	text-align: center;
+	font-size: 1.5em;
+}
+.textouter{
+	color: #000000;
+	background-color: #ffffff;
+	font-size: 1em;
+}
+.textfloat{
+	color: #000000;
+	background-color: #e0ffff;
+	text-align: left;
+	font-size: 1em;
+}
+.textpopup{
+	color: #000000;
+	background-color: #ffffe0;
+	text-align: left;
+	font-size: 1rem;
+}
+.textinput{
+	color: #000000;
+	background-color: #ffffff;
+	font-size: 0.75em;
+}
+.textbutton1{
+	color: #000000;
+	background-color: #80ff80;
+	font-size: 0.75em;
+}
+.textbutton2{
+	color: #000000;
+	background-color: #ff8080;
+	font-size: 0.75em;
+}
+.textoutput{
+	color: #000000;
+	background-color: #e0e0e0;
+	font-size: 1em;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script type="text/javascript">
+function JpycExchange(){
+	let t = this;
+	t.web3 = new Web3("https://polygon-rpc.com/");
+	t.ContractAddress = "0xbc8A1Bebc4D0B42722291De3b0AFa3DeC645d670";
+	t.GetGasPrice = function(){
+		return new Promise(function(a, b){
+			let x = new XMLHttpRequest();
+			x.onload = function(){
+				if(x.status == 200){
+					a(parseInt(JSON.parse(x.response).standard) + 1 + "000000000");
+				}else{
+					b(x.status);
+				}
+			};
+			x.onerror = function(){
+				b(null);
+			}
+			x.open("GET", "https://gasstation-mainnet.matic.network/");
+			x.send();
+		});
+	};
+	t.ConnectWallet = function(){
+		let t = this;
+		return new Promise(function(a, b){
+			window.ethereum.request({method : "eth_requestAccounts"}).then(function(x){
+				window.ethereum.request({method : "wallet_switchEthereumChain", params : [{chainId : "0x89"}]}).then(function(x){
+					t.web3 = new Web3(window.ethereum);
+					a();
+				});
+			});
+		});
+	};
+	t.BalanceOf = function(Token){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "",
+								type : "address"
+							}
+						],
+						name : "balanceOf",
+						outputs : [
+							{
+								name : "",
+								type : "uint256"
+							}
+						],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, Token);
+				c.methods.balanceOf(x[0]).call().then(function(x){
+					a(x);
+				});
+			});
+		});
+	};
+	t.Allowance = function(Token){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "",
+								type : "address"
+							},
+							{
+								name : "",
+								type : "address"
+							}
+						],
+						name : "allowance",
+						outputs : [
+							{
+								name : "",
+								type : "uint256"
+							}
+						],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, Token);
+				c.methods.allowance(x[0], t.ContractAddress).call().then(function(x){
+					a(x);
+				});
+			});
+		});
+	};
+	t.Approve = function(Token){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "",
+								type : "address"
+							},
+							{
+								name : "",
+								type : "uint256"
+							}
+						],
+						name : "approve",
+						outputs : [
+							{
+								name : "",
+								type : "bool"
+							}
+						],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, Token);
+				t.GetGasPrice().then(function(g){
+					c.methods.approve(t.ContractAddress, t.web3.utils.toBN("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")).send({from : x[0], gas : 100000, gasPrice : g}).then(function(x){
+						a(x);
+					});
+				});
+			});
+		});
+	};
+	t.Swap = function(TokenIn, TokenOut, Amount, Minimum){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "tokenIn",
+								type : "address"
+							},
+							{
+								name : "tokenOut",
+								type : "address"
+							},
+							{
+								name : "amount",
+								type : "uint256"
+							},
+							{
+								name : "minimum",
+								type : "uint256"
+							}
+						],
+						name : "swap",
+						outputs : [
+							{
+								name : "",
+								type : "uint256"
+							}
+						],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, t.ContractAddress);
+				t.GetGasPrice().then(function(g){
+					c.methods.swap(TokenIn, TokenOut, Amount, Minimum).send({from : x[0], gas : 5000000, gasPrice : g}).then(function(x){
+						a(x);
+					});
+				});
+			});
+		});
+	};
+	t.Quote = function(TokenIn, TokenOut, Amount){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "tokenIn",
+								type : "address"
+							},
+							{
+								name : "tokenOut",
+								type : "address"
+							},
+							{
+								name : "amount",
+								type : "uint256"
+							},
+							{
+								name : "minimum",
+								type : "uint256"
+							}
+						],
+						name : "swap",
+						outputs : [
+							{
+								name : "",
+								type : "uint256"
+							}
+						],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, t.ContractAddress);
+				c.methods.swap(TokenIn, TokenOut, Amount, 0).call().then(function(x){
+					a(x);
+				});
+			});
+		});
+	};
+}
+function InitializePopup(Name){
+	Array.prototype.forEach.call(document.getElementsByName(Name), function(e){
+		new (function(x){
+			let t = this;
+			t.Popup = x;
+			t.Popup.style.position = "fixed";
+			t.Popup.style.zIndex = "1";
+			t.Popup.style.display = "none";
+			t.Popup.parentNode.addEventListener("mousemove", function(e){
+				t.Popup.style.left = (e.clientX + 1) + "px";
+				t.Popup.style.top = (e.clientY + 1) + "px";
+			});
+			t.Popup.parentNode.addEventListener("mouseenter", function(e){
+				t.Popup.style.display = "block";
+			});
+			t.Popup.parentNode.addEventListener("mouseleave", function(e){
+				t.Popup.style.display = "none";
+			});
+		})(e);
+	});
+}
+var JX = new JpycExchange();
+function Log(x){
+	document.getElementById("log").innerText += new Date().toISOString() + " " + x + "\n";
+};
+function StringToBN(x, d){
+	if(x.indexOf(".") < 0){
+		return JX.web3.utils.toBN(parseInt(x)).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
+	}
+	let b = JX.web3.utils.toBN(parseInt(x.slice(0, x.indexOf(".")))).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
+	for(let i = 0; i < d; i++){
+		if(!isNaN(parseInt(x.charAt(x.indexOf(".") + i + 1)))){
+			b = JX.web3.utils.toBN(parseInt(x.charAt(x.indexOf(".") + i + 1))).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d - i - 1))).add(b);
+		}
+	}
+	return b;
+}
+function BNToString(x, d){
+	return (parseInt(x) / (10 ** d)).toString();
+}
+async function Connect(){
+	await JX.ConnectWallet();
+	Log("Connected");
+}
+async function QuoteJpycForUsdc(){
+	Amount = StringToBN(document.getElementById("jpyc").value, 18);
+	let Minimum = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount);
+	document.getElementById("usdc").value = BNToString(Minimum, 6);
+}
+async function QuoteUsdcForJpyc(){
+	Amount = StringToBN(document.getElementById("usdc").value, 6);
+	let Minimum = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount);
+	document.getElementById("jpyc").value = BNToString(Minimum, 18);
+}
+async function SwapJpycForUsdc(){
+	let x = await JX.Allowance("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
+	if(JX.web3.utils.toBN(x).lt(JX.web3.utils.toBN("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"))){
+		Log("Approve JPYC");
+		let Tx = await JX.Approve("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
+		Log("Transaction hash : " + Tx.transactionHash);
+	}
+	let Amount = StringToBN(document.getElementById("jpyc").value, 18);
+	let Minimum = StringToBN((parseFloat(document.getElementById("usdc").value) * 0.99).toString(), 6);
+	Log("Swap " + document.getElementById("jpyc").value + " JPYC for " + (parseFloat(document.getElementById("usdc").value) * 0.99) + " USDC");
+	let Tx = await JX.Swap("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, Minimum);
+	Log("Transaction hash : " + Tx.transactionHash);
+}
+async function SwapUsdcForJpyc(){
+	let x = await JX.Allowance("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
+	if(JX.web3.utils.toBN(x).lt(JX.web3.utils.toBN("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"))){
+		Log("Approve USDC");
+		let Tx = await JX.Approve("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
+		Log("Transaction hash : " + Tx.transactionHash);
+	}
+	let Amount = StringToBN(document.getElementById("usdc").value, 6);
+	let Minimum = StringToBN((parseFloat(document.getElementById("jpyc").value) * 0.99).toString(), 18);
+	Log("Swap " + document.getElementById("usdc").value + " USDC for " + (parseFloat(document.getElementById("jpyc").value) * 0.99) + " JPYC");
+	let Tx = await JX.Swap("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, Minimum);
+	Log("Transaction hash : " + Tx.transactionHash);
+}
+</script>
+</head>
+<body onload="InitializePopup('popup');">
+<div class="boxoneline textouter" style="margin: auto; width: 45em;">
+<div class="boxoneline texttitle1">JPYC Exchange</div>
+<div class="boxoneline textfloat">
+This is an aggregator to choose and combine the routes of Uniswap V3 USDC/JPYC pool, Curve 2jpy pool and Jarvis Exchange.<br>
+The best rate is automatically shown and used on exchanges.<br>
+<form onsubmit="Connect();return false;">
+<input type="submit" value="Connect to MetaMask" class="boxinline textbutton1">
+</form>
+</div>
+<div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
+<div class="boxoneline texttitle2">JPYC</div>
+<div class="boxoneline">
+<span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
+<input type="text" id="jpyc" class="boxinline textinput" onchange="QuoteJpycForUsdc();"><br>
+<form onsubmit="SwapJpycForUsdc();return false;">
+<input type="submit" value="Swap JPYC for USDC" class="boxinline textbutton1">
+</form>
+</div>
+</div>
+<div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
+<div class="boxoneline texttitle2">USDC</div>
+<div class="boxoneline">
+<span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
+<input type="text" id="usdc" class="boxinline textinput" onchange="QuoteUsdcForJpyc();"><br>
+<form onsubmit="SwapUsdcForJpyc();return false;">
+<input type="submit" value="Swap USDC for JPYC" class="boxinline textbutton1">
+</form>
+</div>
+</div>
+<div class="boxoneline textfloat">
+<div class="boxoneline texttitle2">Log</div>
+<div id="log" class="boxoneline textoutput"></div>
+</div>
+</div>
+</body>
+</html>
