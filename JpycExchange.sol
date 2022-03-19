@@ -81,14 +81,16 @@ contract JpycExchange {
         amountIn1Upper = amount;
         amountIn1Lower = 0;
         if(tokenIn == address(jpyc) && tokenOut == address(usdc)) {
+            amountOutUpper = rateJpycToUsdc(amount);
+            amountOutLower = rateJjpyToUsdc(rateJpycToJjpy(amount));
             for(i = 0; i < 10; i++) {
-                amountOutUpper = rateJpycToUsdc(amountIn1Upper) + rateJjpyToUsdc(rateJpycToJjpy(amount - amountIn1Upper));
-                amountOutLower = rateJpycToUsdc(amountIn1Lower) + rateJjpyToUsdc(rateJpycToJjpy(amount - amountIn1Lower));
                 if(amountOutUpper >= amountOutLower) {
                     amountIn1Lower = (amountIn1Upper + amountIn1Lower) / 2;
+                    amountOutLower = rateJpycToUsdc(amountIn1Lower) + rateJjpyToUsdc(rateJpycToJjpy(amount - amountIn1Lower));
                 }
                 else {
                     amountIn1Upper = (amountIn1Upper + amountIn1Lower) / 2;
+                    amountOutUpper = rateJpycToUsdc(amountIn1Upper) + rateJjpyToUsdc(rateJpycToJjpy(amount - amountIn1Upper));
                 }
             }
             amountIn1Upper = amountOutUpper >= amountOutLower ? amountIn1Upper : amountIn1Lower;
@@ -110,14 +112,16 @@ contract JpycExchange {
             }
         }
         else if(tokenIn == address(usdc) && tokenOut == address(jpyc)) {
+            amountOutUpper = rateUsdcToJpyc(amount);
+            amountOutLower = rateJjpyToJpyc(rateUsdcToJjpy(amount));
             for(i = 0; i < 10; i++) {
-                amountOutUpper = rateUsdcToJpyc(amountIn1Upper) + rateJjpyToJpyc(rateUsdcToJjpy(amount - amountIn1Upper));
-                amountOutLower = rateUsdcToJpyc(amountIn1Lower) + rateJjpyToJpyc(rateUsdcToJjpy(amount - amountIn1Lower));
                 if(amountOutUpper >= amountOutLower) {
                     amountIn1Lower = (amountIn1Upper + amountIn1Lower) / 2;
+                    amountOutLower = rateUsdcToJpyc(amountIn1Lower) + rateJjpyToJpyc(rateUsdcToJjpy(amount - amountIn1Lower));
                 }
                 else {
                     amountIn1Upper = (amountIn1Upper + amountIn1Lower) / 2;
+                    amountOutUpper = rateUsdcToJpyc(amountIn1Upper) + rateJjpyToJpyc(rateUsdcToJjpy(amount - amountIn1Upper));
                 }
             }
             amountIn1Upper = amountOutUpper >= amountOutLower ? amountIn1Upper : amountIn1Lower;
