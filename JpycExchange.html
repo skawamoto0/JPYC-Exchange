@@ -73,6 +73,12 @@
 	background-color: #e0e0e0;
 	font-size: 1em;
 }
+.imageinline{
+	height: 1em;
+	margin: 0em;
+	border: 0em;
+	vertical-align: middle;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
 <script type="text/javascript">
@@ -311,6 +317,16 @@ function InitializePopup(Name){
 		})(e);
 	});
 }
+function InitializeTokenImage(Name){
+	let ImageUrl = {
+		"0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" : "https://assets.coingecko.com/coins/images/17277/small/WoZ8rruL_400x400.png",
+		"0x2791bca1f2de4661ed88a30c99a7a9449aa84174" : "https://assets.coingecko.com/coins/images/6319/small/USD_Coin_icon.png",
+		"0x8343091f2499fd4b6174a46d067a920a3b851ff9" : "https://assets.coingecko.com/coins/images/24327/small/jJPY.png"
+	};
+	Array.prototype.forEach.call(document.getElementsByName(Name), function(e){
+		e.src = ImageUrl[e.id.toLowerCase()];
+	});
+}
 var JX = new JpycExchange();
 function Log(x){
 	document.getElementById("log").innerText += new Date().toISOString() + " " + x + "\n";
@@ -391,9 +407,9 @@ async function SwapUsdcForJpyc(){
 }
 </script>
 </head>
-<body onload="InitializePopup('popup');">
+<body onload="InitializePopup('popup');InitializeTokenImage('token');">
 <div class="boxoneline textouter" style="margin: auto; width: 45em;">
-<div class="boxoneline texttitle1">JPYC Exchange</div>
+<div class="boxoneline texttitle1"><img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline">➡<img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"> JPYC Exchange <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline">➡<img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
 <div class="boxoneline textfloat">
 This is an aggregator to choose and combine the routes of Uniswap V3 USDC/JPYC pool, Curve 2jpy pool and Jarvis Exchange.<br>
 The best rate is automatically shown and used on exchanges.<br>
@@ -402,7 +418,7 @@ The best rate is automatically shown and used on exchanges.<br>
 </form>
 </div>
 <div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
-<div class="boxoneline texttitle2">JPYC</div>
+<div class="boxoneline texttitle2">JPYC <img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
 <div class="boxoneline">
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
 <input type="text" id="amountjpyc" class="boxinline textinput" oninput="QuoteJpycForUsdc();"><br>
@@ -415,7 +431,7 @@ Rate<br>
 </div>
 </div>
 <div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
-<div class="boxoneline texttitle2">USDC</div>
+<div class="boxoneline texttitle2">USDC <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"></div>
 <div class="boxoneline">
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
 <input type="text" id="amountusdc" class="boxinline textinput" oninput="QuoteUsdcForJpyc();"><br>
