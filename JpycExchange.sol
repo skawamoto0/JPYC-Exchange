@@ -174,7 +174,7 @@ contract JpycExchange {
     function rateUsdcToJjpy(uint256 amount) internal view returns(uint256) {
         int256 a;
         (, a, , , ) = aggregatorJarvis.latestRoundData();
-        return amount == 0 ? 0 : ((amount - poolJarvis.calculateFee(amount)) * (10 ** jjpy.decimals()) / (10 ** usdc.decimals())) * (10 ** aggregatorJarvis.decimals()) / uint256(a);
+        return amount == 0 ? 0 : ((amount * amount / (amount + poolJarvis.calculateFee(amount))) * (10 ** jjpy.decimals()) / (10 ** usdc.decimals())) * (10 ** aggregatorJarvis.decimals()) / uint256(a);
     }
     function exchangeUsdcToJjpy(uint256 amount) internal {
         poolJarvis.mint(JarvisMint(derivativeJarvis, 0, amount, 2000000000000000, block.timestamp, address(this)));
