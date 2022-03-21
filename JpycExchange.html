@@ -331,52 +331,45 @@ var JX = new JpycExchange();
 function Log(x){
 	document.getElementById("log").innerText += new Date().toISOString() + " " + x + "\n";
 };
-function StringToBN(x, d){
-	x = x.toString();
-	if(x.indexOf(".") < 0){
-		return JX.web3.utils.toBN(parseInt(x)).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
+function StringToBN(x, Base, Decimals){
+	let a = x.toString();
+	if(a.indexOf(".") < 0){
+		return JX.web3.utils.toBN(a, Base).mul(JX.web3.utils.toBN(Base).pow(JX.web3.utils.toBN(Decimals)));
 	}
-	let b = JX.web3.utils.toBN(parseInt(x.slice(0, x.indexOf(".")))).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
-	for(let i = 0; i < d; i++){
-		if(!isNaN(parseInt(x.charAt(x.indexOf(".") + i + 1)))){
-			b = JX.web3.utils.toBN(parseInt(x.charAt(x.indexOf(".") + i + 1))).mul(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d - i - 1))).add(b);
-		}
-	}
-	return b;
+	let b = JX.web3.utils.toBN(a.slice(0, a.indexOf(".")), Base).mul(JX.web3.utils.toBN(Base).pow(JX.web3.utils.toBN(Decimals)));
+	let c = a.slice(a.indexOf(".") + 1, a.indexOf(".") + 1 + Decimals);
+	let d = JX.web3.utils.toBN(c, Base).mul(JX.web3.utils.toBN(Base).pow(JX.web3.utils.toBN(Decimals - c.length)));
+	return a.charAt(0) == "-" ? b.sub(d) : b.add(d);
 }
-function BNToString(x, d){
-	x = JX.web3.utils.toBN(x);
-	let s = "";
-	if(x.toString().length > d){
-		return x.toString().slice(0, -d) + "." + x.toString().slice(-d);
-	}
-	x = x.add(JX.web3.utils.toBN(10).pow(JX.web3.utils.toBN(d)));
-	return "0." + x.toString().slice(-d);
+function BNToString(x, Base, Decimals){
+	let a = JX.web3.utils.toBN(x);
+	let b = a.divmod(JX.web3.utils.toBN(Base).pow(JX.web3.utils.toBN(Decimals)));
+	return (a.isNeg() ? "-" : "") + b.div.abs().toString(Base) + (Decimals != 0 ? "." + b.mod.abs().toString(Base, Decimals) : "");
 }
 async function Connect(){
 	await JX.ConnectWallet();
 	Log("Connected");
 }
 async function QuoteJpycForUsdc(){
-	Amount = StringToBN(document.getElementById("amountjpyc").value, 18);
+	Amount = StringToBN(document.getElementById("amountjpyc").value, 10, 18);
 	let Minimum = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount);
-	document.getElementById("amountusdc").value = BNToString(Minimum, 6);
+	document.getElementById("amountusdc").value = BNToString(Minimum, 10, 6);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
 }
 async function QuoteUsdcForJpyc(){
-	Amount = StringToBN(document.getElementById("amountusdc").value, 6);
+	Amount = StringToBN(document.getElementById("amountusdc").value, 10, 6);
 	let Minimum = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount);
-	document.getElementById("amountjpyc").value = BNToString(Minimum, 18);
+	document.getElementById("amountjpyc").value = BNToString(Minimum, 10, 18);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
 }
 async function UseMaxJpyc(){
-	document.getElementById("amountjpyc").value = BNToString(await JX.BalanceOf("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c"), 18);
+	document.getElementById("amountjpyc").value = BNToString(await JX.BalanceOf("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c"), 10, 18);
 	await QuoteJpycForUsdc();
 }
 async function UseMaxUsdc(){
-	document.getElementById("amountusdc").value = BNToString(await JX.BalanceOf("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"), 6);
+	document.getElementById("amountusdc").value = BNToString(await JX.BalanceOf("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"), 10, 6);
 	await QuoteUsdcForJpyc();
 }
 async function SwapJpycForUsdc(){
@@ -386,8 +379,8 @@ async function SwapJpycForUsdc(){
 		let Tx = await JX.Approve("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("amountjpyc").value, 18);
-	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.995).toString(), 6);
+	let Amount = StringToBN(document.getElementById("amountjpyc").value, 10, 18);
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.995).toString(), 10, 6);
 	Log("Swap " + document.getElementById("amountjpyc").value + " JPYC for " + (parseFloat(document.getElementById("amountusdc").value) * 0.995) + " USDC");
 	let Tx = await JX.Swap("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
@@ -399,8 +392,8 @@ async function SwapUsdcForJpyc(){
 		let Tx = await JX.Approve("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("amountusdc").value, 6);
-	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.995).toString(), 18);
+	let Amount = StringToBN(document.getElementById("amountusdc").value, 10, 6);
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.995).toString(), 10, 18);
 	Log("Swap " + document.getElementById("amountusdc").value + " USDC for " + (parseFloat(document.getElementById("amountjpyc").value) * 0.995) + " JPYC");
 	let Tx = await JX.Swap("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
