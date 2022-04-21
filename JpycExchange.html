@@ -85,7 +85,7 @@
 function JpycExchange(){
 	let t = this;
 	t.web3 = new Web3("https://polygon-rpc.com/");
-	t.ContractAddress = "0xDb70878a4747B4616233a0f408E9e2A12F28be64";
+	t.ContractAddress = "0x44bf48EEe929ec77AD67d0B8868e5744bD120DA0";
 	t.GetGasPrice = function(){
 		return new Promise(function(a, b){
 			let x = new XMLHttpRequest();
@@ -228,7 +228,7 @@ function JpycExchange(){
 							},
 							{
 								name : "amount",
-								type : "uint256"
+								type : "uint256[]"
 							},
 							{
 								name : "minimum",
@@ -236,25 +236,20 @@ function JpycExchange(){
 							}
 						],
 						name : "swap",
-						outputs : [
-							{
-								name : "",
-								type : "uint256"
-							}
-						],
+						outputs : [],
 						type : "function"
 					}
 				];
 				let c = new t.web3.eth.Contract(abi, t.ContractAddress);
 				t.GetGasPrice().then(function(g){
-					c.methods.swap(TokenIn, TokenOut, Amount, Minimum).send({from : x[0], gas : 5000000, gasPrice : g}).then(function(x){
+					c.methods.swap(TokenIn, TokenOut, Amount, Minimum).send({from : x[0], gas : 1000000, gasPrice : g}).then(function(x){
 						a(x);
 					});
 				});
 			});
 		});
 	};
-	t.Quote = function(TokenIn, TokenOut, Amount){
+	t.Quote = function(TokenIn, TokenOut, Amount, Precision){
 		let t = this;
 		return new Promise(function(a, b){
 			t.web3.eth.getAccounts().then(function(x){
@@ -274,12 +269,16 @@ function JpycExchange(){
 								type : "uint256"
 							},
 							{
-								name : "minimum",
+								name : "precision",
 								type : "uint256"
 							}
 						],
-						name : "swap",
+						name : "quote",
 						outputs : [
+							{
+								name : "",
+								type : "uint256[]"
+							},
 							{
 								name : "",
 								type : "uint256"
@@ -289,7 +288,7 @@ function JpycExchange(){
 					}
 				];
 				let c = new t.web3.eth.Contract(abi, t.ContractAddress);
-				c.methods.swap(TokenIn, TokenOut, Amount, 0).call().then(function(x){
+				c.methods.quote(TokenIn, TokenOut, Amount, Precision).call().then(function(x){
 					a(x);
 				});
 			});
@@ -352,17 +351,25 @@ async function Connect(){
 }
 async function QuoteJpycForUsdc(){
 	Amount = StringToBN(document.getElementById("amountjpyc").value, 10, 18);
-	let Minimum = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount);
-	document.getElementById("amountusdc").value = BNToString(Minimum, 10, 6);
+	let Result = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, 20);
+	document.getElementById("amountusdc").value = BNToString(Result[1], 10, 6);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
+	document.getElementById("route0").innerText = "QuickSwap : " +  (100 * parseFloat(BNToString(Result[0][0], 10, 18)) / parseFloat(document.getElementById("amountjpyc").value)).toFixed() + "%";
+	document.getElementById("route1").innerText = "Uniswap V3 : " +  (100 * parseFloat(BNToString(Result[0][1], 10, 18)) / parseFloat(document.getElementById("amountjpyc").value)).toFixed() + "%";
+	document.getElementById("route2").innerText = "Curve + Jarvis : " +  (100 * parseFloat(BNToString(Result[0][2], 10, 18)) / parseFloat(document.getElementById("amountjpyc").value)).toFixed() + "%";
+	return Result[0];
 }
 async function QuoteUsdcForJpyc(){
 	Amount = StringToBN(document.getElementById("amountusdc").value, 10, 6);
-	let Minimum = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount);
-	document.getElementById("amountjpyc").value = BNToString(Minimum, 10, 18);
+	let Result = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, 20);
+	document.getElementById("amountjpyc").value = BNToString(Result[1], 10, 18);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
+	document.getElementById("route0").innerText = "QuickSwap : " +  (100 * parseFloat(BNToString(Result[0][0], 10, 6)) / parseFloat(document.getElementById("amountusdc").value)).toFixed() + "%";
+	document.getElementById("route1").innerText = "Uniswap V3 : " +  (100 * parseFloat(BNToString(Result[0][1], 10, 6)) / parseFloat(document.getElementById("amountusdc").value)).toFixed() + "%";
+	document.getElementById("route2").innerText = "Curve + Jarvis : " +  (100 * parseFloat(BNToString(Result[0][2], 10, 6)) / parseFloat(document.getElementById("amountusdc").value)).toFixed() + "%";
+	return Result[0];
 }
 async function UseMaxJpyc(){
 	document.getElementById("amountjpyc").value = BNToString(await JX.BalanceOf("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c"), 10, 18);
@@ -379,7 +386,7 @@ async function SwapJpycForUsdc(){
 		let Tx = await JX.Approve("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("amountjpyc").value, 10, 18);
+	let Amount = await QuoteJpycForUsdc();
 	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.995).toString(), 10, 6);
 	Log("Swap " + document.getElementById("amountjpyc").value + " JPYC for " + (parseFloat(document.getElementById("amountusdc").value) * 0.995) + " USDC");
 	let Tx = await JX.Swap("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, Minimum);
@@ -392,7 +399,7 @@ async function SwapUsdcForJpyc(){
 		let Tx = await JX.Approve("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174");
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
-	let Amount = StringToBN(document.getElementById("amountusdc").value, 10, 6);
+	let Amount = await QuoteUsdcForJpyc();
 	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.995).toString(), 10, 18);
 	Log("Swap " + document.getElementById("amountusdc").value + " USDC for " + (parseFloat(document.getElementById("amountjpyc").value) * 0.995) + " JPYC");
 	let Tx = await JX.Swap("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, Minimum);
@@ -400,11 +407,11 @@ async function SwapUsdcForJpyc(){
 }
 </script>
 </head>
-<body onload="InitializePopup('popup');InitializeTokenImage('token');">
-<div class="boxoneline textouter" style="margin: auto; width: 45em;">
+<body onload="InitializePopup('popup');InitializeTokenImage('token');Connect();">
+<div class="boxoneline textouter" style="margin: auto; width: 45em; text-align: center;">
 <div class="boxoneline texttitle1"><img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline">➡<img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"> JPYC Exchange <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline">➡<img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
 <div class="boxoneline textfloat">
-This is an aggregator to choose and combine the routes of Uniswap V3 USDC/JPYC pool, Curve 2jpy pool and Jarvis Exchange.<br>
+This is an aggregator to choose and combine the routes of QuickSwap USDC/JPYC pool, Uniswap V3 USDC/JPYC pool, Curve 2jpy pool and Jarvis Exchange.<br>
 The best rate is automatically shown and used on exchanges.<br>
 <form onsubmit="Connect();return false;">
 <input type="submit" value="Connect to MetaMask" class="boxinline textbutton1">
@@ -435,6 +442,12 @@ Rate<br>
 <input type="submit" value="Swap USDC for JPYC" class="boxinline textbutton1">
 </form>
 </div>
+</div>
+<div class="boxoneline textfloat">
+<div class="boxoneline texttitle2">Details</div>
+<div id="route0" class="boxoneline textoutput"></div>
+<div id="route1" class="boxoneline textoutput"></div>
+<div id="route2" class="boxoneline textoutput"></div>
 </div>
 <div class="boxoneline textfloat">
 <div class="boxoneline texttitle2">Log</div>
