@@ -351,7 +351,7 @@ async function Connect(){
 }
 async function QuoteJpycForUsdc(){
 	Amount = StringToBN(document.getElementById("amountjpyc").value, 10, 18);
-	let Result = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, 20);
+	let Result = await JX.Quote("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, 100);
 	document.getElementById("amountusdc").value = BNToString(Result[1], 10, 6);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
@@ -362,7 +362,7 @@ async function QuoteJpycForUsdc(){
 }
 async function QuoteUsdcForJpyc(){
 	Amount = StringToBN(document.getElementById("amountusdc").value, 10, 6);
-	let Result = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, 20);
+	let Result = await JX.Quote("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, 100);
 	document.getElementById("amountjpyc").value = BNToString(Result[1], 10, 18);
 	document.getElementById("ratejpyc").innerText = parseFloat(document.getElementById("amountusdc").value) / parseFloat(document.getElementById("amountjpyc").value);
 	document.getElementById("rateusdc").innerText = parseFloat(document.getElementById("amountjpyc").value) / parseFloat(document.getElementById("amountusdc").value);
@@ -387,8 +387,8 @@ async function SwapJpycForUsdc(){
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
 	let Amount = await QuoteJpycForUsdc();
-	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.995).toString(), 10, 6);
-	Log("Swap " + document.getElementById("amountjpyc").value + " JPYC for " + (parseFloat(document.getElementById("amountusdc").value) * 0.995) + " USDC");
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountusdc").value) * 0.997).toString(), 10, 6);
+	Log("Swap " + document.getElementById("amountjpyc").value + " JPYC for " + (parseFloat(document.getElementById("amountusdc").value) * 0.997) + " USDC");
 	let Tx = await JX.Swap("0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }
@@ -400,8 +400,8 @@ async function SwapUsdcForJpyc(){
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
 	let Amount = await QuoteUsdcForJpyc();
-	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.995).toString(), 10, 18);
-	Log("Swap " + document.getElementById("amountusdc").value + " USDC for " + (parseFloat(document.getElementById("amountjpyc").value) * 0.995) + " JPYC");
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountjpyc").value) * 0.997).toString(), 10, 18);
+	Log("Swap " + document.getElementById("amountusdc").value + " USDC for " + (parseFloat(document.getElementById("amountjpyc").value) * 0.997) + " JPYC");
 	let Tx = await JX.Swap("0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", "0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c", Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }
