@@ -361,18 +361,21 @@ var TokenIn;
 var TokenOut;
 const Info = {
 	"0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" : {
+		name : "JPYCv1",
 		decimals : 18,
 		symbol : "JPYC",
 		"0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" : ["V2 exchange", "Uniswap V3 JPYCv1/JPYCv2", "Uniswap V3 USDC/JPYCv1 + Uniswap V3 USDC/JPYCv2", "Curve 2jpy + Curve 2jpy-2", "null"],
 		"0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" : ["QuickSwap USDC/JPYCv1", "Uniswap V3 USDC/JPYCv1", "V2 exchange + Uniswap V3 USDC/JPYCv2", "Curve 2jpy + Jarvis", "V2 exchange + Curve 2jpy-2 + Jarvis"]
 	},
 	"0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" : {
+		name : "JPYCv2",
 		decimals : 18,
 		symbol : "JPYC",
 		"0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" : ["QuickSwap JPYCv1/JPYCv2", "Uniswap V3 JPYCv1/JPYCv2", "Uniswap V3 USDC/JPYCv2 + Uniswap V3 USDC/JPYCv1", "Curve 2jpy-2 + Curve 2jpy", "null"],
 		"0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" : ["QuickSwap USDC/JPYCv2", "Uniswap V3 USDC/JPYCv2", "Uniswap V3 JPYCv1/JPYCv2 + Uniswap V3 USDC/JPYCv1", "Curve 2jpy-2 + Jarvis", "null"]
 	},
 	"0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" : {
+		name : "USDC",
 		decimals : 6,
 		symbol : "USDC",
 		"0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" : ["QuickSwap USDC/JPYCv1", "Uniswap V3 USDC/JPYCv1", "Uniswap V3 USDC/JPYCv2 + Uniswap V3 JPYCv1/JPYCv2", "Jarvis + Curve 2jpy", "null"],
@@ -435,6 +438,7 @@ async function QuoteToken(TokenIn, TokenOut){
 	document.getElementById("amountout").value = BNToString(Result[1], 10, Info[TokenOut].decimals);
 	document.getElementById("ratein").innerText = parseFloat(document.getElementById("amountout").value) / parseFloat(document.getElementById("amountin").value);
 	document.getElementById("rateout").innerText = parseFloat(document.getElementById("amountin").value) / parseFloat(document.getElementById("amountout").value);
+	document.getElementById("swap").value = "Swap " + Info[TokenIn].name + " for " + Info[TokenOut].name;
 	document.getElementById("route0").innerText = Info[TokenIn][TokenOut][0] + " : " +  (100 * parseFloat(BNToString(Result[0][0], 10, Info[TokenIn].decimals)) / parseFloat(document.getElementById("amountin").value)).toFixed() + "%";
 	document.getElementById("route1").innerText = Info[TokenIn][TokenOut][1] + " : " +  (100 * parseFloat(BNToString(Result[0][1], 10, Info[TokenIn].decimals)) / parseFloat(document.getElementById("amountin").value)).toFixed() + "%";
 	document.getElementById("route2").innerText = Info[TokenIn][TokenOut][2] + " : " +  (100 * parseFloat(BNToString(Result[0][2], 10, Info[TokenIn].decimals)) / parseFloat(document.getElementById("amountin").value)).toFixed() + "%";
@@ -461,7 +465,7 @@ async function SwapToken(TokenIn, TokenOut){
 }</script>
 </head>
 <body onload="Initialize();">
-<div class="boxoneline textouter" style="margin: auto; width: 48em; text-align: center;">
+<div class="boxoneline textouter" style="margin: auto; width: 50em; text-align: center;">
 <div class="boxoneline texttitle1"><img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline">➡<img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"> JPYC Exchange V2 <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline">➡<img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
 <div class="boxoneline textfloat">
 This is an aggregator to choose and combine the routes of QuickSwap <a href="https://info.quickswap.exchange/#/pair/0x205995421c72dc223f36bbfad78b66eea72d2677" target="_blank">USDC/JPYCv1</a> and <a href="https://info.quickswap.exchange/#/pair/0x59377dbd9f550568540cae0b21412bee1cc3f439" target="_blank">USDC/JPYCv2</a> pool, Uniswap V3 <a href="https://info.uniswap.org/#/polygon/pools/0x98349e1689538fd878646b77b3dcd89040a35eb6" target="_blank">USDC/JPYCv1</a> and <a href="https://info.uniswap.org/#/polygon/pools/0x286af3968aec55ec3acd463bf59edc7cbc04102e" target="_blank">USDC/JPYCv2</a> pool, Curve <a href="https://polygon.curve.fi/factory/85" target="_blank">2jpy</a> and <a href="https://polygon.curve.fi/factory/255" target="_blank">2jpy-2</a> pool, <a href="https://app.jarvis.exchange/" target="_blank">Jarvis Exchange</a> and <a href="https://app.jpyc.jp/v2-exchange/" target="_blank">JPYC official V2 exchange</a>.<br>
@@ -471,38 +475,41 @@ The best rate is automatically shown and used on exchanges.<br>
 </form>
 </div>
 <div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
-<input id="tokenin" style="display:none" value="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c">
-<div name="tokenin" id="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" class="boxoneline texttitle2">JPYCv1 <img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
-<div name="tokenin" id="0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" class="boxoneline texttitle2">JPYCv2 <img name="token" id="0x431d5dff03120afa4bdf332c61a6e1766ef37bdb" class="imageinline"></div>
-<div name="tokenin" id="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" class="boxoneline texttitle2">USDC <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"></div>
 <div class="boxoneline">
+You pay<br>
+<input id="tokenin" style="display:none" value="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c">
+<div name="tokenin" id="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" class="boxoneline texttitle2" style="font-size: 1em;">JPYCv1 <img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
+<div name="tokenin" id="0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" class="boxoneline texttitle2" style="font-size: 1em;">JPYCv2 <img name="token" id="0x431d5dff03120afa4bdf332c61a6e1766ef37bdb" class="imageinline"></div>
+<div name="tokenin" id="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" class="boxoneline texttitle2" style="font-size: 1em;">USDC <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"></div>
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
-<input type="text" id="amountin" class="boxinline textinput" oninput="QuoteToken(TokenIn, TokenOut);"><br>
+<input type="text" id="amountin" class="boxinline textinput" oninput="QuoteToken(TokenIn, TokenOut);"><input type="button" value="Use max" class="boxinline textbutton1" onclick="UseMaxToken(TokenIn);"><br>
 <span>Rate<div name="popup" class="boxinline textpopup">This is the exchange rate.</div></span><br>
 <div id="ratein" class="boxoneline textoutput"></div>
+</div>
+</div>
+<div class="boxinline textfloat" style="font-size: 1.5em; vertical-align: top;">➡</div>
+<div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
+<div class="boxoneline">
+You get<br>
+<input id="tokenout" style="display:none" value="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174">
+<div name="tokenout" id="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" class="boxoneline texttitle2" style="font-size: 1em;">JPYCv1 <img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
+<div name="tokenout" id="0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" class="boxoneline texttitle2" style="font-size: 1em;">JPYCv2 <img name="token" id="0x431d5dff03120afa4bdf332c61a6e1766ef37bdb" class="imageinline"></div>
+<div name="tokenout" id="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" class="boxoneline texttitle2" style="font-size: 1em;">USDC <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"></div>
+<span>Amount</span><br>
+<input type="text" id="amountout" class="boxinline textinput" oninput="QuoteUsdcForJpyc();" readonly="readonly"><br>
+Rate<br>
+<div id="rateout" class="boxoneline textoutput"></div>
+</div>
+</div>
+<div class="boxoneline textfloat">
+<div class="boxoneline">
 <span>Slippage tolerance<div name="popup" class="boxinline textpopup">This is how much you accept decrease in the return.<br>The more tolerance you choose, the less possibility of failure there is.</div></span><br>
 <input id="slippage" style="display:none" value="0.0001">
 <div name="slippage" id="0.0001" class="boxinline texttitle2" style="font-size: 1em;">0.01%</div>
 <div name="slippage" id="0.0003" class="boxinline texttitle2" style="font-size: 1em;">0.03%</div>
 <div name="slippage" id="0.001" class="boxinline texttitle2" style="font-size: 1em;">0.1%</div>
 <div name="slippage" id="0.003" class="boxinline texttitle2" style="font-size: 1em;">0.3%</div>
-<form onsubmit="SwapToken(TokenIn, TokenOut);return false;">
-<input type="button" value="Use max" class="boxinline textbutton1" onclick="UseMaxToken(TokenIn);">
-<input type="submit" value="Swap" class="boxinline textbutton1">
-</form>
-</div>
-</div>
-<div class="boxinline textfloat" style="vertical-align: top;">➡</div>
-<div class="boxinline textfloat" style="min-width: 20em; vertical-align: top;">
-<input id="tokenout" style="display:none" value="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174">
-<div name="tokenout" id="0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c" class="boxoneline texttitle2">JPYCv1 <img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
-<div name="tokenout" id="0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB" class="boxoneline texttitle2">JPYCv2 <img name="token" id="0x431d5dff03120afa4bdf332c61a6e1766ef37bdb" class="imageinline"></div>
-<div name="tokenout" id="0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174" class="boxoneline texttitle2">USDC <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"></div>
-<div class="boxoneline">
-<span>Amount</span><br>
-<input type="text" id="amountout" class="boxinline textinput" oninput="QuoteUsdcForJpyc();" readonly="readonly"><br>
-Rate<br>
-<div id="rateout" class="boxoneline textoutput"></div>
+<input type="button" id="swap" value="Swap" class="boxoneline textbutton1" onclick="SwapToken(TokenIn, TokenOut);">
 </div>
 </div>
 <div class="boxoneline textfloat">
