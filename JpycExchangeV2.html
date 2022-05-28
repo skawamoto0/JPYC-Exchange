@@ -384,6 +384,7 @@ function Initialize(){
 	InitializeTokenImage("token");
 	InitializeSelection("tokenin");
 	InitializeSelection("tokenout");
+	InitializeSelection("slippage");
 	TokenIn = document.getElementById("tokenin").value;
 	TokenOut = document.getElementById("tokenout").value;
 	document.getElementById("tokenin").addEventListener("change", function(e){
@@ -453,8 +454,8 @@ async function SwapToken(TokenIn, TokenOut){
 		Log("Transaction hash : " + Tx.transactionHash);
 	}
 	let Amount = await QuoteToken(TokenIn, TokenOut);
-	let Minimum = StringToBN((parseFloat(document.getElementById("amountout").value) * 0.9999).toString(), 10, Info[TokenOut].decimals);
-	Log("Swap " + document.getElementById("amountin").value + " " + Info[TokenIn].symbol + " for " + (parseFloat(document.getElementById("amountout").value) * 0.9999) + " " + Info[TokenOut].symbol + " at the minimum");
+	let Minimum = StringToBN((parseFloat(document.getElementById("amountout").value) * (1.0 - parseFloat(document.getElementById("slippage").value))).toString(), 10, Info[TokenOut].decimals);
+	Log("Swap " + document.getElementById("amountin").value + " " + Info[TokenIn].symbol + " for " + parseFloat(BNToString(Minimum, 10, Info[TokenOut].decimals)) + " " + Info[TokenOut].symbol + " at the minimum");
 	let Tx = await JX.Swap(TokenIn, TokenOut, Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }</script>
@@ -463,7 +464,7 @@ async function SwapToken(TokenIn, TokenOut){
 <div class="boxoneline textouter" style="margin: auto; width: 48em; text-align: center;">
 <div class="boxoneline texttitle1"><img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline">➡<img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline"> JPYC Exchange V2 <img name="token" id="0x2791bca1f2de4661ed88a30c99a7a9449aa84174" class="imageinline">➡<img name="token" id="0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c" class="imageinline"></div>
 <div class="boxoneline textfloat">
-This is an aggregator to choose and combine the routes of QuickSwap USDC/JPYCv1 and USDC/JPYCv2 pool, Uniswap V3 USDC/JPYCv1 and USDC/JPYCv2 pool, Curve 2jpy and 2jpy-2 pool, Jarvis Exchange and JPYC official V2 exchange.<br>
+This is an aggregator to choose and combine the routes of QuickSwap <a href="https://info.quickswap.exchange/#/pair/0x205995421c72dc223f36bbfad78b66eea72d2677" target="_blank">USDC/JPYCv1</a> and <a href="https://info.quickswap.exchange/#/pair/0x59377dbd9f550568540cae0b21412bee1cc3f439" target="_blank">USDC/JPYCv2</a> pool, Uniswap V3 <a href="https://info.uniswap.org/#/polygon/pools/0x98349e1689538fd878646b77b3dcd89040a35eb6" target="_blank">USDC/JPYCv1</a> and <a href="https://info.uniswap.org/#/polygon/pools/0x286af3968aec55ec3acd463bf59edc7cbc04102e" target="_blank">USDC/JPYCv2</a> pool, Curve <a href="https://polygon.curve.fi/factory/85" target="_blank">2jpy</a> and <a href="https://polygon.curve.fi/factory/255" target="_blank">2jpy-2</a> pool, <a href="https://app.jarvis.exchange/" target="_blank">Jarvis Exchange</a> and <a href="https://app.jpyc.jp/v2-exchange/" target="_blank">JPYC official V2 exchange</a>.<br>
 The best rate is automatically shown and used on exchanges.<br>
 <form onsubmit="Connect();return false;">
 <input type="submit" value="Connect to MetaMask" class="boxinline textbutton1">
@@ -477,8 +478,14 @@ The best rate is automatically shown and used on exchanges.<br>
 <div class="boxoneline">
 <span>Amount<div name="popup" class="boxinline textpopup">The quotation will be shown on the other side when you input here.</div></span><br>
 <input type="text" id="amountin" class="boxinline textinput" oninput="QuoteToken(TokenIn, TokenOut);"><br>
-Rate<br>
+<span>Rate<div name="popup" class="boxinline textpopup">This is the exchange rate.</div></span><br>
 <div id="ratein" class="boxoneline textoutput"></div>
+<span>Slippage tolerance<div name="popup" class="boxinline textpopup">This is how much you accept decrease in the return.<br>The more tolerance you choose, the less possibility of failure there is.</div></span><br>
+<input id="slippage" style="display:none" value="0.0001">
+<div name="slippage" id="0.0001" class="boxinline texttitle2" style="font-size: 1em;">0.01%</div>
+<div name="slippage" id="0.0003" class="boxinline texttitle2" style="font-size: 1em;">0.03%</div>
+<div name="slippage" id="0.001" class="boxinline texttitle2" style="font-size: 1em;">0.1%</div>
+<div name="slippage" id="0.003" class="boxinline texttitle2" style="font-size: 1em;">0.3%</div>
 <form onsubmit="SwapToken(TokenIn, TokenOut);return false;">
 <input type="button" value="Use max" class="boxinline textbutton1" onclick="UseMaxToken(TokenIn);">
 <input type="submit" value="Swap" class="boxinline textbutton1">
