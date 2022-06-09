@@ -294,6 +294,46 @@ function JpycExchange(){
 			});
 		});
 	};
+	t.TestSwap = function(TokenIn, TokenOut, Amount, Minimum){
+		let t = this;
+		return new Promise(function(a, b){
+			t.web3.eth.getAccounts().then(function(x){
+				let abi = [
+					{
+						inputs : [
+							{
+								name : "tokenIn",
+								type : "address"
+							},
+							{
+								name : "tokenOut",
+								type : "address"
+							},
+							{
+								name : "amount",
+								type : "uint256[]"
+							},
+							{
+								name : "minimum",
+								type : "uint256"
+							}
+						],
+						name : "swap",
+						outputs : [],
+						type : "function"
+					}
+				];
+				let c = new t.web3.eth.Contract(abi, t.ContractAddress);
+				t.GetGasPrice().then(function(g){
+					c.methods.swap(TokenIn, TokenOut, Amount, Minimum).call({from : x[0]}).then(function(x){
+						a(x);
+					}, function(x){
+						b(x);
+					});
+				});
+			});
+		});
+	};
 }
 function InitializePopup(Name){
 	Array.prototype.forEach.call(document.getElementsByName(Name), function(e){
@@ -460,6 +500,14 @@ async function SwapToken(TokenIn, TokenOut){
 	let Amount = await QuoteToken(TokenIn, TokenOut);
 	let Minimum = StringToBN((parseFloat(document.getElementById("amountout").value) * (1.0 - parseFloat(document.getElementById("slippage").value))).toString(), 10, Info[TokenOut].decimals);
 	Log("Swap " + document.getElementById("amountin").value + " " + Info[TokenIn].symbol + " for " + parseFloat(BNToString(Minimum, 10, Info[TokenOut].decimals)) + " " + Info[TokenOut].symbol + " at the minimum");
+	try{
+		await JX.TestSwap(TokenIn, TokenOut, Amount, Minimum);
+	}catch{
+		Log("Transaction test failed");
+		if(!confirm("Transaction may be failed.\nDo you want to continue?")){
+			return;
+		}
+	}
 	let Tx = await JX.Swap(TokenIn, TokenOut, Amount, Minimum);
 	Log("Transaction hash : " + Tx.transactionHash);
 }</script>
